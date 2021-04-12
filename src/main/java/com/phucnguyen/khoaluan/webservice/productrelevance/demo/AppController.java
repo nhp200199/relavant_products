@@ -288,10 +288,10 @@ public class AppController {
     }
 
     @RequestMapping("/test-mongo")
-    public List<Object> getProduct(@RequestParam int id, @RequestParam int categoryId, @RequestParam String name,
+    public List<Object> getProduct(@RequestParam long id, @RequestParam int categoryId, @RequestParam String name,
             @RequestParam String platform) {
         // get stopwords based on currentProduct's category. Remember that we have to
-        // map the product's category to its root category to receive stopwords
+           // map the product's category to its root category to receive stopwords
         // of that root category
         Set<String> stopwordsSet = null;
         if (platform.equals("tiki")) {
