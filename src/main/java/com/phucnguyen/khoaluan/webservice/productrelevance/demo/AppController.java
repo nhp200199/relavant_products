@@ -34,6 +34,8 @@ public class AppController {
     private TikiProductsRepo repo;
     @Autowired
     private ShopeeProductsRepo shopeeRepo;
+    @Autowired
+    LastCategoryService categoryService;
 
     String sellId;
     String productId;
@@ -291,7 +293,7 @@ public class AppController {
     public List<Object> getProduct(@RequestParam long id, @RequestParam int categoryId, @RequestParam String name,
             @RequestParam String platform) {
         // get stopwords based on currentProduct's category. Remember that we have to
-           // map the product's category to its root category to receive stopwords
+        // map the product's category to its root category to receive stopwords
         // of that root category
         Set<String> stopwordsSet = null;
         if (platform.equals("tiki")) {
@@ -305,15 +307,44 @@ public class AppController {
         // query the optimized name on db for candidates (tiki db and shopee db)
         List<Product> candidates = repo.findProductsByRelavantName(optimizedName, platform);
         List<ShopeeProduct> shopeeCandidates = shopeeRepo.findProductsByRelavantName(optimizedName, platform);
-        // for each of the candidates, check that whether it is
-        // same category as the currentProduct's. Then eliminate
-        // those have a text similarity less then 80%
+        List<MappedLastCategory> categories = null;
+        // remove the product with same id of currentProduct and perform logic on
+        // receiving categories
+        if (platform.equals("tiki")) {
+            candidates.removeIf(product -> product.getId() == id);
+            categories = categoryService.getCategoriesBasedOnTikiCate(String.valueOf(categoryId));
+        } else if (platform.equals("shopee")) {
+            shopeeCandidates.removeIf(product -> product.getId() == id);
+            categories = categoryService.getCategoriesBasedOnShopeeCate(String.valueOf(categoryId));
+        }
+        Set<String> tikiEqualCateStrings = new HashSet<String>();
+        Set<String> shopeeEqualCateStrings = new HashSet<String>();
+        for (MappedLastCategory category : categories) {
+            String[] shopeeCateStrings = category.getShopeeId().split("\\|");
+            for (String categoryString : shopeeCateStrings) {
+                shopeeEqualCateStrings.add(categoryString);
+            }
+            String[] tikiCateStrings = category.getTikiId().split("\\|");
+            for (String categoryString : tikiCateStrings) {
+                tikiEqualCateStrings.add(categoryString);
+            }
+        }
+
+        // for each of the candidates, remove those are not same category as the
+        // currentProduct's.
+        candidates.removeIf(tikiProduct -> !tikiEqualCateStrings.contains(String.valueOf(tikiProduct.getCategoryId())));
+        shopeeCandidates.removeIf(
+                shopeeProduct -> !shopeeEqualCateStrings.contains(String.valueOf(shopeeProduct.getCategoryId())));
+
+        // Then eliminate those have a text similarity less then 80%
         CosineDistance cosineDistance = new CosineDistance();
         candidates.removeIf(product -> {
+            // String test = optimizeWord(product.getName(), resultSet);
             return cosineDistance.apply(optimizedName, optimizeWord(product.getName(), resultSet)) > 0.2;
         });
         shopeeCandidates.removeIf(product -> {
-            return cosineDistance.apply(optimizedName, optimizeWord(product.getName(), resultSet)) > 0.2;
+            // String test = optimizeWord(product.getName(), resultSet);
+            return cosineDistance.apply(optimizedName, optimizeWord(product.getName(), resultSet)) >= 0.2;
         });
         // give back results to client
         List<Object> results = new ArrayList<Object>();
@@ -408,7 +439,7 @@ public class AppController {
 
     public String optimizeWord(String name, Set<String> stopwordsSet) {
         // First, remove the special characters from string
-        String bracketsAndContentsPattern = "\\[.*\\]";
+        String bracketsAndContentsPattern = "\\[.*?\\]";
         String specialCharsPattern = "[\\@\\!\\#\\$\\%\\^\\&\\*\\(\\)\\-\\'\\;\\,\\.\\/\\?\\>\\<\\+\\[\\]\\_\\|]";
         String bracketsRemovedText = name.replaceAll(bracketsAndContentsPattern, " ");
         String removedSpecialCharsString = bracketsRemovedText.replaceAll(specialCharsPattern, " ");

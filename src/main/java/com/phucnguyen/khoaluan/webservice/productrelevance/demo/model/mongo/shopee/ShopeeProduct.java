@@ -1,14 +1,16 @@
 package com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.shopee;
 
-import javax.persistence.Id;
-
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "ItemsShopee")
 public class ShopeeProduct {
     @Id
-    private String id;
+    private String objectId;
+    @Field("id")
+    private long id;
     @TextIndexed
     String name;
     private int currentPrice;
@@ -17,9 +19,10 @@ public class ShopeeProduct {
     private String productUrl;
     private String platform;
 
-    public ShopeeProduct(String id, String name, int currentPrice, String thumbnailUrl, int categoryId,
+    public ShopeeProduct(String objectId, long id, String name, int currentPrice, String thumbnailUrl, int categoryId,
             String productUrl, String platform) {
         this.id = id;
+        this.objectId = objectId;
         this.name = name;
         this.currentPrice = currentPrice;
         this.thumbnailUrl = thumbnailUrl;
@@ -28,11 +31,11 @@ public class ShopeeProduct {
         this.platform = platform;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -82,6 +85,14 @@ public class ShopeeProduct {
 
     public void setPlatform(String platform) {
         this.platform = platform;
+    }
+
+    public String getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
     }
 
 }
