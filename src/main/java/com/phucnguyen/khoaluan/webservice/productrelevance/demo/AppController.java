@@ -1,6 +1,7 @@
 package com.phucnguyen.khoaluan.webservice.productrelevance.demo;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -298,10 +299,10 @@ public class AppController {
         // return null;
     }
 
-    @RequestMapping("/get-relavant-products")
+    @RequestMapping("/get-relevant-products")
     public String getProduct(@RequestParam long id, @RequestParam int categoryId, @RequestParam String name,
             @RequestParam String platform) {
-        List<CommonProperty> relavantProducts = new ArrayList<CommonProperty>();
+        List<CommonProperty> relevantProducts = new ArrayList<CommonProperty>();
         String concatRedisProductId = REDIS_PRODUCT_ID_PREFIX + platform + "-" + id;
         if (relavantRepo.hasKey(concatRedisProductId)) {
             // if there are already relavant products in redis, return them
@@ -320,8 +321,8 @@ public class AppController {
         // optimize the product's name
         String optimizedName = optimizeWord(name, stopwordsSet);
         // query the optimized name on db for candidates (tiki db and shopee db)
-        List<TikiProduct> tikiCandidates = repo.findProductsByRelavantName(optimizedName, platform);
-        List<ShopeeProduct> shopeeCandidates = shopeeRepo.findProductsByRelavantName(optimizedName, platform);
+        List<TikiProduct> tikiCandidates = repo.findProductsByRelevantName(optimizedName, platform);
+        List<ShopeeProduct> shopeeCandidates = shopeeRepo.findProductsByRelevantName(optimizedName, platform);
         System.out.println("Tiki candidates: " + tikiCandidates.size());
         System.out.println("shopee candidates: " + shopeeCandidates.size());
         List<MappedLastCategory> categories = null;
@@ -399,16 +400,16 @@ public class AppController {
             }
         }
         if (belowCurrentPriceTikiProducts.size() != 0) {
-            relavantProducts.addAll(belowCurrentPriceTikiProducts);
+            relevantProducts.addAll(belowCurrentPriceTikiProducts);
         } else {
-            relavantProducts.addAll(tikiCandidates);
+            relevantProducts.addAll(tikiCandidates);
         }
         if (belowCurrentPriceShopeeProducts.size() != 0) {
-            relavantProducts.addAll(belowCurrentPriceShopeeProducts);
+            relevantProducts.addAll(belowCurrentPriceShopeeProducts);
         } else {
-            relavantProducts.addAll(shopeeCandidates);
+            relevantProducts.addAll(shopeeCandidates);
         }
-        relavantProducts.sort(new Comparator<CommonProperty>() {
+        relevantProducts.sort(new Comparator<CommonProperty>() {
 
             @Override
             public int compare(CommonProperty o1, CommonProperty o2) {
@@ -421,13 +422,13 @@ public class AppController {
         ObjectMapper objectMapper = new ObjectMapper();
         String relavantProductsJsonString = null;
         try {
-            relavantProductsJsonString = objectMapper.writeValueAsString(relavantProducts);
+            relavantProductsJsonString = objectMapper.writeValueAsString(relevantProducts);
         } catch (JsonProcessingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        relavantRepo.opsForValue().setIfAbsent(concatRedisProductId, relavantProductsJsonString,
-        8, TimeUnit.HOURS);
+        relavantRepo.opsForValue().setIfAbsent(concatRedisProductId, relavantProductsJsonString);
+        relavantRepo.expire(concatRedisProductId, 4, TimeUnit.HOURS);
         return relavantProductsJsonString;
     }
 

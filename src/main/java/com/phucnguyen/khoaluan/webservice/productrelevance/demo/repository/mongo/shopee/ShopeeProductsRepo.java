@@ -18,7 +18,7 @@ public class ShopeeProductsRepo {
     @Qualifier("mongoShopeeTemplate")
     private MongoTemplate mongoTemplate;
 
-    public List<ShopeeProduct> findProductsByRelavantName(String name, String platform) {
+    public List<ShopeeProduct> findProductsByRelevantName(String name, String platform) {
         TextCriteria criteria = TextCriteria.forDefaultLanguage().matching(name);
         Query textQuery = TextQuery.queryText(criteria).sortByScore().limit(100);
         return mongoTemplate.find(textQuery, ShopeeProduct.class);

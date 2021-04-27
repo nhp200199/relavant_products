@@ -16,7 +16,7 @@ public class TikiProductsRepo {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public List<TikiProduct> findProductsByRelavantName(String name, String platform) {
+    public List<TikiProduct> findProductsByRelevantName(String name, String platform) {
         TextCriteria criteria = TextCriteria.forDefaultLanguage().matching(name);
         Query textQuery = TextQuery.queryText(criteria).sortByScore().limit(100);
         return mongoTemplate.find(textQuery, TikiProduct.class);
