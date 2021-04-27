@@ -1,13 +1,15 @@
 package com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.tiki;
 
+import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.CommonProperty;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 
 @Document(collection = "ItemsTiki")
-public class Product {
+public class TikiProduct implements CommonProperty {
     @Id
     private String objectId;
     @Field("id")
@@ -19,9 +21,11 @@ public class Product {
     private int categoryId;
     private String productUrl;
     private String platform;
+    @TextScore
+    Float score;
 
-    public Product(String objectId, long id, String name, int currentPrice, String thumbnailUrl, int categoryId, String productUrl,
-            String platform) {
+    public TikiProduct(String objectId, long id, String name, int currentPrice, String thumbnailUrl, int categoryId,
+            String productUrl, String platform) {
         this.objectId = objectId;
         this.id = id;
         this.name = name;
@@ -94,6 +98,11 @@ public class Product {
 
     public void setObjectId(String objectId) {
         this.objectId = objectId;
+    }
+
+    @Override
+    public float getCommonScoreProperty() {
+        return score;
     }
 
 }

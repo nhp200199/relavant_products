@@ -20,7 +20,7 @@ public class ShopeeProductsRepo {
 
     public List<ShopeeProduct> findProductsByRelavantName(String name, String platform) {
         TextCriteria criteria = TextCriteria.forDefaultLanguage().matching(name);
-        Query textQuery = TextQuery.queryText(criteria).sortByScore().limit(30);
+        Query textQuery = TextQuery.queryText(criteria).sortByScore().limit(100);
         return mongoTemplate.find(textQuery, ShopeeProduct.class);
     }
 }

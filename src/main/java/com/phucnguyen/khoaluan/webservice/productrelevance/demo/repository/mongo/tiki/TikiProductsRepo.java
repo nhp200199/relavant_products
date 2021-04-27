@@ -2,8 +2,7 @@ package com.phucnguyen.khoaluan.webservice.productrelevance.demo.repository.mong
 
 import java.util.List;
 
-import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.tiki.Product;
-
+import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.tiki.TikiProduct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -17,10 +16,10 @@ public class TikiProductsRepo {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public List<Product> findProductsByRelavantName(String name, String platform) {
+    public List<TikiProduct> findProductsByRelavantName(String name, String platform) {
         TextCriteria criteria = TextCriteria.forDefaultLanguage().matching(name);
-        Query textQuery = TextQuery.queryText(criteria).sortByScore().limit(30);
-        return mongoTemplate.find(textQuery, Product.class);
+        Query textQuery = TextQuery.queryText(criteria).sortByScore().limit(100);
+        return mongoTemplate.find(textQuery, TikiProduct.class);
     }
 
 }

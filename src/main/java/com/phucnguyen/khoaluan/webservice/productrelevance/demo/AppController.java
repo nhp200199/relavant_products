@@ -3,17 +3,23 @@ package com.phucnguyen.khoaluan.webservice.productrelevance.demo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.CommonProperty;
 import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.shopee.ShopeeProduct;
-import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.tiki.Product;
+import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.tiki.TikiProduct;
 import com.phucnguyen.khoaluan.webservice.productrelevance.demo.repository.mongo.shopee.ShopeeProductsRepo;
 import com.phucnguyen.khoaluan.webservice.productrelevance.demo.repository.mongo.tiki.TikiProductsRepo;
 
 import org.apache.commons.text.similarity.CosineDistance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +32,7 @@ public class AppController {
     final String TIKI_BASE_URL = "https://tiki.vn/";
     final String SHOPEE_BASE_URL = "https://shopee.vn/";
     final String SHOPEE_IMAGE_BASE_URL = "https://cf.shopee.vn/file/";
+    final String REDIS_PRODUCT_ID_PREFIX = "relavant-products-";
     @Autowired
     private StopwordService stopwordService;
     @Autowired
@@ -33,13 +40,15 @@ public class AppController {
     @Autowired
     private TikiProductsRepo repo;
     @Autowired
+    private RedisTemplate<String, String> relavantRepo;
+    @Autowired
     private ShopeeProductsRepo shopeeRepo;
     @Autowired
     LastCategoryService categoryService;
 
     String sellId;
     String productId;
-    Product currentProduct;
+    TikiProduct currentProduct;
 
     @RequestMapping("/get-stopword-name")
     public String getRelevantProducts(@RequestParam String url) {
@@ -289,9 +298,15 @@ public class AppController {
         // return null;
     }
 
-    @RequestMapping("/test-mongo")
-    public List<Object> getProduct(@RequestParam long id, @RequestParam int categoryId, @RequestParam String name,
+    @RequestMapping("/get-relavant-products")
+    public String getProduct(@RequestParam long id, @RequestParam int categoryId, @RequestParam String name,
             @RequestParam String platform) {
+        List<CommonProperty> relavantProducts = new ArrayList<CommonProperty>();
+        String concatRedisProductId = REDIS_PRODUCT_ID_PREFIX + platform + "-" + id;
+        if (relavantRepo.hasKey(concatRedisProductId)) {
+            // if there are already relavant products in redis, return them
+            return relavantRepo.opsForValue().get(concatRedisProductId);
+        }
         // get stopwords based on currentProduct's category. Remember that we have to
         // map the product's category to its root category to receive stopwords
         // of that root category
@@ -305,20 +320,40 @@ public class AppController {
         // optimize the product's name
         String optimizedName = optimizeWord(name, stopwordsSet);
         // query the optimized name on db for candidates (tiki db and shopee db)
-        List<Product> candidates = repo.findProductsByRelavantName(optimizedName, platform);
+        List<TikiProduct> tikiCandidates = repo.findProductsByRelavantName(optimizedName, platform);
         List<ShopeeProduct> shopeeCandidates = shopeeRepo.findProductsByRelavantName(optimizedName, platform);
+        System.out.println("Tiki candidates: " + tikiCandidates.size());
+        System.out.println("shopee candidates: " + shopeeCandidates.size());
         List<MappedLastCategory> categories = null;
         // remove the product with same id of currentProduct and perform logic on
         // receiving categories
+        int[] currentProductPrice = new int[1];
         if (platform.equals("tiki")) {
-            candidates.removeIf(product -> product.getId() == id);
+            tikiCandidates.removeIf(product -> {
+                if (product.getId() == id) {
+                    currentProductPrice[0] = product.getCurrentPrice();
+                    return true;
+                } else
+                    return false;
+            });
             categories = categoryService.getCategoriesBasedOnTikiCate(String.valueOf(categoryId));
         } else if (platform.equals("shopee")) {
-            shopeeCandidates.removeIf(product -> product.getId() == id);
+            shopeeCandidates.removeIf(product -> {
+                if (product.getId() == id) {
+                    currentProductPrice[0] = product.getCurrentPrice();
+                    return true;
+                } else
+                    return false;
+            });
             categories = categoryService.getCategoriesBasedOnShopeeCate(String.valueOf(categoryId));
         }
         Set<String> tikiEqualCateStrings = new HashSet<String>();
         Set<String> shopeeEqualCateStrings = new HashSet<String>();
+        if (platform.equals("tiki")) {
+            tikiEqualCateStrings.add(String.valueOf(categoryId));
+        } else {
+            shopeeEqualCateStrings.add(String.valueOf(categoryId));
+        }
         for (MappedLastCategory category : categories) {
             String[] shopeeCateStrings = category.getShopeeId().split("\\|");
             for (String categoryString : shopeeCateStrings) {
@@ -332,28 +367,71 @@ public class AppController {
 
         // for each of the candidates, remove those are not same category as the
         // currentProduct's.
-        candidates.removeIf(tikiProduct -> !tikiEqualCateStrings.contains(String.valueOf(tikiProduct.getCategoryId())));
+        tikiCandidates
+                .removeIf(tikiProduct -> !tikiEqualCateStrings.contains(String.valueOf(tikiProduct.getCategoryId())));
         shopeeCandidates.removeIf(
                 shopeeProduct -> !shopeeEqualCateStrings.contains(String.valueOf(shopeeProduct.getCategoryId())));
 
         // Then eliminate those have a text similarity less then 80%
-        CosineDistance cosineDistance = new CosineDistance();
-        candidates.removeIf(product -> {
-            // String test = optimizeWord(product.getName(), resultSet);
-            return cosineDistance.apply(optimizedName, optimizeWord(product.getName(), resultSet)) > 0.2;
-        });
-        shopeeCandidates.removeIf(product -> {
-            // String test = optimizeWord(product.getName(), resultSet);
-            return cosineDistance.apply(optimizedName, optimizeWord(product.getName(), resultSet)) >= 0.2;
+        // CosineDistance cosineDistance = new CosineDistance();
+        // tikiCandidates.removeIf(product -> {
+        // // String test = optimizeWord(product.getName(), resultSet);
+        // return cosineDistance.apply(optimizedName, optimizeWord(product.getName(),
+        // resultSet)) > 0.2;
+        // });
+        // shopeeCandidates.removeIf(product -> {
+        // // String test = optimizeWord(product.getName(), resultSet);
+        // return cosineDistance.apply(optimizedName, optimizeWord(product.getName(),
+        // resultSet)) >= 0.2;
+        // });
+
+        // remove products that are more expensive than the current one
+        List<TikiProduct> belowCurrentPriceTikiProducts = new ArrayList<TikiProduct>();
+        List<ShopeeProduct> belowCurrentPriceShopeeProducts = new ArrayList<ShopeeProduct>();
+        for (ShopeeProduct shopeeProduct : shopeeCandidates) {
+            if (shopeeProduct.getCurrentPrice() <= currentProductPrice[0]) {
+                belowCurrentPriceShopeeProducts.add(shopeeProduct);
+            }
+        }
+        for (TikiProduct tikiProduct : tikiCandidates) {
+            if (tikiProduct.getCurrentPrice() <= currentProductPrice[0]) {
+                belowCurrentPriceTikiProducts.add(tikiProduct);
+            }
+        }
+        if (belowCurrentPriceTikiProducts.size() != 0) {
+            relavantProducts.addAll(belowCurrentPriceTikiProducts);
+        } else {
+            relavantProducts.addAll(tikiCandidates);
+        }
+        if (belowCurrentPriceShopeeProducts.size() != 0) {
+            relavantProducts.addAll(belowCurrentPriceShopeeProducts);
+        } else {
+            relavantProducts.addAll(shopeeCandidates);
+        }
+        relavantProducts.sort(new Comparator<CommonProperty>() {
+
+            @Override
+            public int compare(CommonProperty o1, CommonProperty o2) {
+                // sort in decending order
+                return -(Float.compare(o1.getCommonScoreProperty(), o2.getCommonScoreProperty()));
+            }
+
         });
         // give back results to client
-        List<Object> results = new ArrayList<Object>();
-        results.addAll(candidates);
-        results.addAll(shopeeCandidates);
-        return results;
+        ObjectMapper objectMapper = new ObjectMapper();
+        String relavantProductsJsonString = null;
+        try {
+            relavantProductsJsonString = objectMapper.writeValueAsString(relavantProducts);
+        } catch (JsonProcessingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        relavantRepo.opsForValue().setIfAbsent(concatRedisProductId, relavantProductsJsonString,
+        8, TimeUnit.HOURS);
+        return relavantProductsJsonString;
     }
 
-    private int calculateRelavanceRate(Product currentProduct, Product candidate) {
+    private int calculateRelavanceRate(TikiProduct currentProduct, TikiProduct candidate) {
         return 0;
     }
 
@@ -444,7 +522,12 @@ public class AppController {
         String bracketsRemovedText = name.replaceAll(bracketsAndContentsPattern, " ");
         String removedSpecialCharsString = bracketsRemovedText.replaceAll(specialCharsPattern, " ");
 
-        // segment words and compare them to the stopwords list
+        // segment words and compare them to the stopwords list.But before that if the
+        // stopwordsSet contains 0 element, we could just return the
+        // removedSpecialCharsString
+        if (stopwordsSet.size() == 0) {
+            return removedSpecialCharsString;
+        }
         List<String> seperatedWordsList = seperateWordFromString(removedSpecialCharsString);
         StringBuilder result = new StringBuilder();
         for (String word : seperatedWordsList) {

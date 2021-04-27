@@ -1,12 +1,15 @@
 package com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.mongo.shopee;
 
+import com.phucnguyen.khoaluan.webservice.productrelevance.demo.model.CommonProperty;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 
 @Document(collection = "ItemsShopee")
-public class ShopeeProduct {
+public class ShopeeProduct implements CommonProperty {
     @Id
     private String objectId;
     @Field("id")
@@ -18,6 +21,8 @@ public class ShopeeProduct {
     private int categoryId;
     private String productUrl;
     private String platform;
+    @TextScore
+    Float score;
 
     public ShopeeProduct(String objectId, long id, String name, int currentPrice, String thumbnailUrl, int categoryId,
             String productUrl, String platform) {
@@ -95,4 +100,8 @@ public class ShopeeProduct {
         this.objectId = objectId;
     }
 
+    @Override
+    public float getCommonScoreProperty() {
+        return score;
+    }
 }
