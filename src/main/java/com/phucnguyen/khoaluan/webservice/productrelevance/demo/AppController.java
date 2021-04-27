@@ -33,7 +33,7 @@ public class AppController {
     final String TIKI_BASE_URL = "https://tiki.vn/";
     final String SHOPEE_BASE_URL = "https://shopee.vn/";
     final String SHOPEE_IMAGE_BASE_URL = "https://cf.shopee.vn/file/";
-    final String REDIS_PRODUCT_ID_PREFIX = "relavant-products-";
+    final String REDIS_PRODUCT_ID_PREFIX = "relevant-products-";
     @Autowired
     private StopwordService stopwordService;
     @Autowired
@@ -427,8 +427,10 @@ public class AppController {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        relavantRepo.opsForValue().setIfAbsent(concatRedisProductId, relavantProductsJsonString);
-        relavantRepo.expire(concatRedisProductId, 4, TimeUnit.HOURS);
+        if(relavantProductsJsonString.length() != 0){
+            relavantRepo.opsForValue().setIfAbsent(concatRedisProductId, relavantProductsJsonString);
+            relavantRepo.expire(concatRedisProductId, 4, TimeUnit.HOURS);
+        }
         return relavantProductsJsonString;
     }
 
