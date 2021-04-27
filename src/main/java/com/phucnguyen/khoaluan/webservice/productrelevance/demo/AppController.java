@@ -427,7 +427,7 @@ public class AppController {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        if(relavantProductsJsonString.length() != 0){
+        if(relavantProductsJsonString.length() > 2){
             relavantRepo.opsForValue().setIfAbsent(concatRedisProductId, relavantProductsJsonString);
             relavantRepo.expire(concatRedisProductId, 4, TimeUnit.HOURS);
         }
