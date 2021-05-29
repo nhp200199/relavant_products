@@ -21,11 +21,13 @@ public class TikiProduct implements CommonProperty {
     private int categoryId;
     private String productUrl;
     private String platform;
+    private long rating;
+    private int totalReview;
     @TextScore
     Float score;
 
     public TikiProduct(String objectId, long id, String name, int currentPrice, String thumbnailUrl, int categoryId,
-            String productUrl, String platform) {
+            String productUrl, String platform, long rating, int totalReview) {
         this.objectId = objectId;
         this.id = id;
         this.name = name;
@@ -34,6 +36,8 @@ public class TikiProduct implements CommonProperty {
         this.categoryId = categoryId;
         this.productUrl = productUrl;
         this.platform = platform;
+        this.rating = rating;
+        this.totalReview = totalReview;
     }
 
     public long getId() {
@@ -98,6 +102,22 @@ public class TikiProduct implements CommonProperty {
 
     public void setObjectId(String objectId) {
         this.objectId = objectId;
+    }
+
+    public long getRating() {
+        return rating;
+    }
+
+    public void setRating(long rating) {
+        this.rating = rating;
+    }
+
+    public int getTotalReview() {
+        return totalReview;
+    }
+
+    public void setTotalReview(int totalReview) {
+        this.totalReview = totalReview;
     }
 
     @Override

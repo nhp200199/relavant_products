@@ -1,6 +1,8 @@
 package com.phucnguyen.khoaluan.webservice.productrelevance.demo;
 
 import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,8 +38,6 @@ public class AppController {
     final String REDIS_PRODUCT_ID_PREFIX = "relevant-products-";
     @Autowired
     private StopwordService stopwordService;
-    @Autowired
-    private EvaluationService evaluationService;
     @Autowired
     private TikiProductsRepo repo;
     @Autowired
@@ -501,7 +501,7 @@ public class AppController {
     // }
     // Iterator<JsonNode> categoryIterator =
     // jsonProductNode.get("item").get("categories").elements();
-    // List<JsonNode> categoryList = new ArrayList<JsonNode>();
+    // List<JsonNode> categoryList   = new ArrayList<JsonNode>();
     // while (categoryIterator.hasNext()) {
     // categoryList.add(categoryIterator.next());
     // }
