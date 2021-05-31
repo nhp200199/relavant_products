@@ -12,6 +12,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity(name = "standard_last_node_category")
 public class MappedLastCategory {
     @Id
@@ -22,13 +24,7 @@ public class MappedLastCategory {
     private String tikiId;
     @Column(name = "shopee_equi_cate_id")
     private String shopeeId;
-    @ManyToMany()
-    @JoinTable(
-      name = "last_cate_evaluation_criteria",
-      joinColumns = @JoinColumn(name = "cate_id"), 
-      inverseJoinColumns = @JoinColumn(name = "criteria_id")
-    ) 
-    private Set<Evaluation> evaluations;
+    @JsonIgnore
     @ManyToOne()
     @JoinColumn(name = "root_id")
     private RootCategory rootCate;
@@ -50,12 +46,6 @@ public class MappedLastCategory {
     }
     public void setShopeeId(String shopeeId) {
       this.shopeeId = shopeeId;
-    }
-    public Set<Evaluation> getEvaluations() {
-      return evaluations;
-    }
-    public void setEvaluations(Set<Evaluation> evaluations) {
-      this.evaluations = evaluations;
     }
     public RootCategory getRootCate() {
       return rootCate;

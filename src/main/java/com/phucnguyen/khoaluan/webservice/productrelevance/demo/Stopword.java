@@ -2,27 +2,33 @@ package com.phucnguyen.khoaluan.webservice.productrelevance.demo;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity(name = "stop_word")
+@IdClass(StopwordId.class)
 public class Stopword {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
+    @Id
     private String name;
-    private String pos;
+    @Id
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "root_cate_id")
     private RootCategory rootCate;
+
+    public Stopword(){}
+
+    public Stopword(int id, String name, RootCategory rootCate) {
+        this.id = id;
+        this.name = name;
+        this.rootCate = rootCate;
+    }
+
     public String getName() {
         return name;
     }
     public void setName(String name) {
         this.name = name;
-    }
-    public String getPos() {
-        return pos;
-    }
-    public void setPos(String pos) {
-        this.pos = pos;
     }
     public RootCategory getRootCate() {
         return rootCate;

@@ -252,7 +252,7 @@ public class AppController {
         // });
 
         // return currentProduct.toString();
-        Set<String> stopwordsSet = new HashSet<String>(stopwordService.getStopwordsByRootCate(productId));
+        Set<String> stopwordsSet = new HashSet<String>(stopwordService.getStopwordsByTikiCate(productId));
         return stopwordsSet.toString();
 
         // the comment section below is u?sed for crawl product by html
@@ -313,7 +313,7 @@ public class AppController {
         // of that root category
         Set<String> stopwordsSet = null;
         if (platform.equals("tiki")) {
-            stopwordsSet = new HashSet<String>(stopwordService.getStopwordsByRootCate(String.valueOf(categoryId)));
+            stopwordsSet = new HashSet<String>(stopwordService.getStopwordsByTikiCate(String.valueOf(categoryId)));
         } else {
             stopwordsSet = new HashSet<String>(stopwordService.getStopwordsByShopeeCate(String.valueOf(categoryId)));
         }

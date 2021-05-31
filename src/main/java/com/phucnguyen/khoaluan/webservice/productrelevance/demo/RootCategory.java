@@ -1,5 +1,6 @@
 package com.phucnguyen.khoaluan.webservice.productrelevance.demo;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -9,6 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity(name="root_category")
 public class RootCategory {
     @Id
@@ -17,9 +20,9 @@ public class RootCategory {
     @Column(name = "root_name")
     private String rootName;
     @OneToMany(mappedBy = "rootCate")
-    private Set<Stopword> stopwords;
+    private Set<Stopword> stopwords = new HashSet<Stopword>();
     @OneToMany(mappedBy = "rootCate")
-    private Set<MappedLastCategory> subCategories;
+    private Set<MappedLastCategory> subCategories = new HashSet<MappedLastCategory>();
     
     public String getRootName() {
         return rootName;
