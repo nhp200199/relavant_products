@@ -21,13 +21,13 @@ public class ShopeeProduct implements CommonProperty {
     private int categoryId;
     private String productUrl;
     private String platform;
-    private long rating;
+    private float rating;
     private int totalReview; 
     @TextScore
     Float score;
 
     public ShopeeProduct(String objectId, long id, String name, int currentPrice, String thumbnailUrl, int categoryId,
-            String productUrl, String platform, long rating, int totalReview) {
+            String productUrl, String platform, float rating, int totalReview) {
         this.id = id;
         this.objectId = objectId;
         this.name = name;
@@ -104,11 +104,11 @@ public class ShopeeProduct implements CommonProperty {
         this.objectId = objectId;
     }
 
-    public long getRating() {
+    public float getRating() {
         return rating;
     }
 
-    public void setRating(long rating) {
+    public void setRating(float rating) {
         this.rating = rating;
     }
 
