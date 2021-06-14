@@ -18,28 +18,28 @@ public class AdminController {
     private StopwordService stopwordService;
     @Autowired RootCategoryService rootCategoryService;
     
-    @PostMapping("/api/v1/admin/relevant-products/root-category/{rootCategory}/stopwords")
+    @PostMapping("/get-relevant-products/root-category/{rootCategory}/stopwords")
     public void addOneNewStopword(@PathVariable int rootCategory, @RequestBody String stopwordsString){
         stopwordService.addOneNewStopword(rootCategory, stopwordsString);
     }
 
-    @DeleteMapping("/api/v1/admin/relevant-products/root-category/{categoryId}/stopwords/{stopword}")
+    @DeleteMapping("/get-relevant-products/root-category/{categoryId}/stopwords/{stopword}")
     public void deleteOneStopword(@PathVariable int categoryId, @PathVariable String stopword){
         StopwordId id = new StopwordId(stopword, categoryId);
         stopwordService.deleteStopwordById(id);
     }
 
-    @DeleteMapping("/api/v1/admin/relevant-products/root-category/{categoryId}/stopwords")
+    @DeleteMapping("/get-relevant-products/root-category/{categoryId}/stopwords")
     public void deleteStopwordsInCategory(@PathVariable int categoryId){
         stopwordService.deleteStopwordsInCategory(categoryId);
     }
 
-    @GetMapping("/api/v1/admin/relevant-products/stopwords")
+    @GetMapping("/get-relevant-products/stopwords")
     public List<Stopword> getAllStopwords(){
         return stopwordService.getAllStopwords();
     }
 
-    @GetMapping("/api/v1/admin/relevant-products/root-category/{rootId}")
+    @GetMapping("/get-relevant-products/root-category/{rootId}")
     public RootCategory getRootCategoryById(@PathVariable int rootId){
         return rootCategoryService.getRootCategoryById(rootId);
     }
