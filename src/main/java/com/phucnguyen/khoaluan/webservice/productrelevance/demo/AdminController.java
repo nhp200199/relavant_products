@@ -45,11 +45,11 @@ public class AdminController {
     }
 
     @GetMapping("/get-relevant-products/root-category")
-    public List<RootCategory> getAllRootCategory(){
+    public List<String> getAllRootCategory(){
         return rootCategoryService.getAllRootCategories();
     }
 
-    @GetMapping("/get-relevant-products/root-category/{rootCategory}")
+    @GetMapping("/get-relevant-products/root-category/{rootCategory}/stopwords")
     public List<Stopword> getStopwordsByRootCateId(@PathVariable int rootCategory){
         return stopwordService.getStopwordsByRootCateId(rootCategory);
     }
