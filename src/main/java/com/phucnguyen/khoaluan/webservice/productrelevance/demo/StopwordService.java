@@ -46,6 +46,11 @@ public class StopwordService {
     public List<String> getStopwordName(){
         return stopwordRepo.getStopwordName();
     }
+
+    public List<Stopword> getStopwordsByRootCateId(int cateId){
+        return stopwordRepo.findByRootCateId(cateId);
+    }
+
     public List<String> getStopwordsByTikiCate(String category){
         return stopwordRepo.getStopwordsByTikiCate(category);
     }

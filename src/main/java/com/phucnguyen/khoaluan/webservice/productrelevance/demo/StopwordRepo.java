@@ -36,4 +36,6 @@ public interface StopwordRepo extends CrudRepository<Stopword, StopwordId>{
     @Query(value = "delete from stop_word " +
     "where root_cate_id = :rootCateId", nativeQuery = true)
     public void deleteStopwordsInCategory(@Param("rootCateId") int rootCateId);
+
+    public List<Stopword> findByRootCateId(int id);
 }

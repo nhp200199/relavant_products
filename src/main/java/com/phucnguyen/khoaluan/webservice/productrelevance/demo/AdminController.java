@@ -43,4 +43,14 @@ public class AdminController {
     public RootCategory getRootCategoryById(@PathVariable int rootId){
         return rootCategoryService.getRootCategoryById(rootId);
     }
+
+    @GetMapping("/get-relevant-products/root-category")
+    public List<RootCategory> getAllRootCategory(){
+        return rootCategoryService.getAllRootCategories();
+    }
+
+    @GetMapping("/get-relevant-products/root-category/{rootCategory}")
+    public List<Stopword> getStopwordsByRootCateId(@PathVariable int rootCategory){
+        return stopwordService.getStopwordsByRootCateId(rootCategory);
+    }
 }
