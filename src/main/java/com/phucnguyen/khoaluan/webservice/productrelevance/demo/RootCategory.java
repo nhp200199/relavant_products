@@ -20,6 +20,7 @@ public class RootCategory {
     @Column(name = "root_name")
     private String rootName;
     @OneToMany(mappedBy = "rootCate")
+    @JsonIgnore
     private Set<Stopword> stopwords = new HashSet<Stopword>();
     @OneToMany(mappedBy = "rootCate")
     private Set<MappedLastCategory> subCategories = new HashSet<MappedLastCategory>();
@@ -41,6 +42,12 @@ public class RootCategory {
     }
     public void setSubCategories(Set<MappedLastCategory> subCategories) {
         this.subCategories = subCategories;
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
     }
     
 }

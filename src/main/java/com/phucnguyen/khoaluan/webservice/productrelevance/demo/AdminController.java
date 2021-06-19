@@ -45,7 +45,7 @@ public class AdminController {
     }
 
     @GetMapping("/get-relevant-products/root-category")
-    public List<String> getAllRootCategory(){
+    public List<RootCategory> getAllRootCategory(){
         return rootCategoryService.getAllRootCategories();
     }
 

@@ -15,9 +15,9 @@ public class RootCategoryService {
         return rootCategoryRepo.findById(rootId).get();
     }
     
-    public List<String> getAllRootCategories(){
-        List<String> allCategories = new ArrayList<String>();
-        rootCategoryRepo.findAll().forEach(rootCate -> allCategories.add(rootCate.getRootName()));
+    public List<RootCategory> getAllRootCategories(){
+        List<RootCategory> allCategories = new ArrayList<RootCategory>();
+        rootCategoryRepo.findAll().forEach(rootCate -> allCategories.add(rootCate));
         return allCategories;
     }
 }
